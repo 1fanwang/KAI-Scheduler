@@ -8,6 +8,7 @@ import (
 	commonconstants "github.com/NVIDIA/KAI-scheduler/pkg/common/constants"
 	"github.com/NVIDIA/KAI-scheduler/pkg/scheduler/api"
 	"github.com/NVIDIA/KAI-scheduler/pkg/scheduler/api/podgroup_info"
+	"github.com/NVIDIA/KAI-scheduler/pkg/scheduler/api/resource_info"
 	"github.com/NVIDIA/KAI-scheduler/pkg/scheduler/log"
 	rs "github.com/NVIDIA/KAI-scheduler/pkg/scheduler/plugins/proportion/resource_share"
 	"github.com/NVIDIA/KAI-scheduler/pkg/scheduler/plugins/proportion/utils"
@@ -69,7 +70,9 @@ func isAllocatedNonPreemptibleOverQuota(
 		if !found || requestedQty == 0 {
 			continue
 		}
-		if resourceShare.Deserved < resourceShare.AllocatedNotPreemptible+requestedQty {
+		allocatedWithRequest := resourceShare.AllocatedNotPreemptible + requestedQty
+		if allocatedWithRequest > resourceShare.Deserved &&
+			!resource_info.LessOrEqualWithTolerance(allocatedWithRequest, resourceShare.Deserved) {
 			return true, resource
 		}
 	}
